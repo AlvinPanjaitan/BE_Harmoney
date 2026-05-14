@@ -2,6 +2,7 @@ import {
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import FormData from 'form-data';
 
@@ -32,6 +33,8 @@ export interface SessionData {
 @Injectable()
 export class SplitService {
   private sessions = new Map<string, SessionData>();
+
+  constructor(private readonly configService: ConfigService){}
 
   // =========================
   // SESSION
@@ -67,14 +70,25 @@ export class SplitService {
       contentType: file.mimetype,
     });
 
+    const ocrBaseUrl = this.configService.get<string>(
+      'PYTHON_OCR_SERVICE_URL',
+    );
+
+    if(!ocrBaseUrl){
+      throw new InternalServerErrorException(
+        'PYTHON_OCR_SERVICE_URL belum di-set di file .env',
+      );
+    }
+
     try {
       const response = await axios.post(
-        'http://127.0.0.1:5000/scan-receipt',
+        `${ocrBaseUrl}/scan-receipt`,
         formData,
         {
           headers: {
             ...formData.getHeaders(),
           },
+          timeout: 120000,
         },
       );
 
