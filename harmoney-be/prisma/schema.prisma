@@ -9,7 +9,162 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
+}
+
+enum Currency {
+  IDR
+  USD
+  EUR
+  SGD
+  MYR
+}
+
+enum ReportFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum AuthProvider {
+  LOCAL
+  GOOGLE
+}
+
+enum CategoryType {
+  INCOME
+  EXPENSE
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  TRANSFER
+}
+
+model User {
+  user_id    String   @id @default(uuid()) @db.Uuid
+  name       String   @db.VarChar(100)
+  email      String   @unique @db.VarChar(255)
+  avatar_url String?  @db.Text
+  currency   Currency @default(IDR)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  auth_credentials AuthCredential[]
+  password_resets  PasswordReset[]
+  wallets          Wallet[]
+  categories       Category[]
+  transactions     Transaction[]
+  savings          Saving[]
+
+  @@map("users")
+}
+
+model AuthCredential {
+  credential_id String       @id @default(uuid()) @db.Uuid
+  user_id       String       @db.Uuid
+  provider      AuthProvider
+  password      String?      @db.VarChar(255) // null for OAuth providers
+  provider_uid  String?      @db.VarChar(255) // Google sub for OAuth
+  created_at    DateTime     @default(now())
+  updated_at    DateTime     @updatedAt
+
+  // Relations
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@unique([user_id, provider])
+  @@map("auth_credentials")
+}
+
+model PasswordReset {
+  reset_id   String   @id @default(uuid()) @db.Uuid
+  user_id    String   @db.Uuid
+  token_hash String   @unique @db.VarChar(255)
+  expires_at DateTime
+  created_at DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@map("password_resets")
+}
+
+model Wallet {
+  wallet_id  String   @id @default(uuid()) @db.Uuid
+  user_id    String   @db.Uuid
+  name       String   @db.VarChar(100)
+  icon       String?  @db.VarChar(50)
+  balance    Decimal  @default(0) @db.Decimal(15, 2)
+  currency   Currency @default(IDR)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  user                  User          @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  transactions          Transaction[] @relation("WalletTransactions")
+  transfer_transactions Transaction[] @relation("TargetWalletTransactions")
+
+  @@map("wallets")
+}
+
+model Category {
+  category_id String       @id @default(uuid()) @db.Uuid
+  user_id     String       @db.Uuid
+  name        String       @db.VarChar(100)
+  type        CategoryType
+  icon        String?      @db.VarChar(50)
+  created_at  DateTime     @default(now())
+  updated_at  DateTime     @updatedAt
+
+  // Relations
+  user         User          @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@map("categories")
+}
+
+model Transaction {
+  transaction_id   String          @id @default(uuid()) @db.Uuid
+  user_id          String          @db.Uuid
+  wallet_id        String          @db.Uuid
+  target_wallet_id String?         @db.Uuid // for TRANSFER type
+  category_id      String?         @db.Uuid // null for TRANSFER
+  type             TransactionType
+  amount           Decimal         @db.Decimal(15, 2)
+  description      String?         @db.Text
+  transaction_date DateTime
+  created_at       DateTime        @default(now())
+  updated_at       DateTime        @updatedAt
+
+  // Relations
+  user          User      @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  wallet        Wallet    @relation("WalletTransactions", fields: [wallet_id], references: [wallet_id], onDelete: Cascade)
+  target_wallet Wallet?   @relation("TargetWalletTransactions", fields: [target_wallet_id], references: [wallet_id], onDelete: SetNull)
+  category      Category? @relation(fields: [category_id], references: [category_id], onDelete: SetNull)
+
+  // Indexes (untuk performa query dashboard)
+  @@index([user_id, transaction_date])
+  @@index([user_id, type])
+  @@map("transactions")
+}
+
+model Saving {
+  saving_id      String    @id @default(uuid()) @db.Uuid
+  user_id        String    @db.Uuid
+  name           String    @db.VarChar(100)
+  target_amount  Decimal   @db.Decimal(15, 2)
+  current_amount Decimal   @default(0) @db.Decimal(15, 2)
+  target_date    DateTime?
+  icon           String?   @db.VarChar(50)
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @updatedAt
+
+  // Relations
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@map("savings")
 }
