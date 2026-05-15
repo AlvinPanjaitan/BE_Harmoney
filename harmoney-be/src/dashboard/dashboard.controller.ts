@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
 
 /**
@@ -17,7 +17,7 @@ export class DashboardController {
   // =====================================================
   // Hardcoded user ID - HARUS match dengan SEED_USER_ID di prisma/seed.ts
   // =====================================================
-  private readonly HARDCODED_USER_ID = '11111111-1111-1111-1111-111111111111';
+  private readonly DEFAULT_USER_ID = '11111111-1111-1111-1111-111111111111';
 
   /**
    * GET /api/dashboard/summary
@@ -29,8 +29,9 @@ export class DashboardController {
    *  - Savings goals progress
    */
   @Get('summary')
-  async getSummary() {
-    const data = await this.dashboardService.getSummary(this.HARDCODED_USER_ID);
+  async getSummary(@Query('userId') userId?: string) {
+    const targetUserId = userId || this.DEFAULT_USER_ID; // Step 7: Ganti dengan req.user.user_id nanti
+    const data = await this.dashboardService.getSummary(targetUserId);
 
     return {
       status: 'success',
