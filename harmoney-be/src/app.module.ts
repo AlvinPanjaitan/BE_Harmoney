@@ -5,14 +5,16 @@ import { AppService } from './app.service';
 
 import { PrismaModule } from './prisma/prisma.module'
 import { SplitModule } from './split/split.module';
-import { DashboardModule} from './dashboard/dashboard.module'
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    PrismaModule,
     SplitModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],
