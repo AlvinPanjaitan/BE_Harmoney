@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module'
 import { SplitModule } from './split/split.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     PrismaModule,
     SplitModule,
     DashboardModule,
+    AuthModule
   ],
   controllers: [AppController],
   providers: [AppService],
