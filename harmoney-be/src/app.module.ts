@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module'
 import { SplitModule } from './split/split.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { AuthModule } from './auth/auth.module';
+import { TransactionModule } from './transaction/transaction.module';
 
 @Module({
   imports: [
@@ -16,7 +17,8 @@ import { AuthModule } from './auth/auth.module';
     PrismaModule,
     SplitModule,
     DashboardModule,
-    AuthModule
+    AuthModule,
+    TransactionModule
   ],
   controllers: [AppController],
   providers: [AppService],

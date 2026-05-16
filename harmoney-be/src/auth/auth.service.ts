@@ -10,7 +10,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  // 1. SIGN UP
+  
   async signUp(dto: any) {
     if (dto.password !== dto.confirm_password) {
       throw new BadRequestException('Password and Confirm Password do not match!');
@@ -43,7 +43,7 @@ export class AuthService {
     return { message: 'Sign up successful!', userId: newUser.user_id };
   }
 
-  // 2. SIGN IN
+  
   async signIn(dto: any) {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
@@ -71,7 +71,8 @@ export class AuthService {
     };
   }
 
-  // 3. FORGOT PASSWORD (Diubah dari resetToken menjadi token)
+  
+
   async forgotPassword(dto: any) {
     const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
     if (!user) {
@@ -92,13 +93,13 @@ export class AuthService {
 
     return {
       message: 'Simulation: Password reset link has been generated successfully.',
-      token: simulatedToken, // <--- REVISI: Sekarang mengembalikan properti 'token'
+      token: simulatedToken, 
     };
   }
 
-  // 4. RESET PASSWORD (Membaca properti token baru)
+  
   async resetPassword(dto: any) {
-    // Menyesuaikan pembacaan input dari dto.token
+    
     const resetRequest = await this.prisma.passwordReset.findUnique({
       where: { token_hash: dto.token }, 
       include: { user: true },
@@ -128,7 +129,7 @@ export class AuthService {
     return { message: 'Password updated successfully! Please sign in again.' };
   }
 
-  // 5. LOG OUT
+  
   async logOut() {
     return { message: 'Log out successful! Please remove the token from the client side.' };
   }
