@@ -1,18 +1,18 @@
-import { Controller, Post, Get, Body, Query, UseGuards, Res, HttpStatus, HttpException } from '@nestjs/common';
+import { Controller, Post, Get, Body, Query, UseGuards, Req, Res, HttpStatus, HttpException } from '@nestjs/common';
 import { AnalyticsService } from './analytics.service';
 import { GetAnalyticsDto, ExportReportDto } from './analytics.dto';
-import { AuthGuard } from './auth.guard';
-import { Response } from 'express';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard'; 
+import type { Response } from 'express';
 
 @Controller('api/analytics')
-@UseGuards(AuthGuard)
+@UseGuards(JwtAuthGuard)
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
   @Post('summary')
-  async getAnalyticsSummary(@Body() dto: GetAnalyticsDto) {
+  async getAnalyticsSummary(@Req() req: any, @Body() dto: GetAnalyticsDto) {
     try {
-      const data = await this.analyticsService.getSummary(dto);
+      const data = await this.analyticsService.getSummary(req.user.userId, dto);
       return {
         msg: 'Analytics data retrieved successfully',
         data,
@@ -27,28 +27,25 @@ export class AnalyticsController {
             : (response as any).message;
         } else if (typeof response === 'string') {
           message = response;
-        } else {
-          message = error.message;
         }
       } else if (error instanceof Error) {
         message = error.message;
       }
-      throw new HttpException(
-        { msg: message },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new HttpException({ msg: message }, HttpStatus.BAD_REQUEST);
     }
   }
 
   @Get('export')
-  async exportReport(@Query() dto: ExportReportDto, @Res() res: Response) {
+  // 1. DIUBAH: Tambahkan { passthrough: true } agar NestJS mengizinkan manipulasi stream header Excel
+  async exportReport(@Req() req: any, @Query() dto: ExportReportDto, @Res({ passthrough: true }) res: Response) {
     try {
-      const fileData = await this.analyticsService.generateExportFile(dto);
+      const fileData = await this.analyticsService.generateExportFile(req.user.userId, dto);
       
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       res.setHeader('Content-Disposition', `attachment; filename=report-${dto.period}.xlsx`);
       
-      return res.status(HttpStatus.OK).send(fileData);
+      // 2. DIUBAH: Hapus kata kunci 'return' di depan res, biarkan express mengirimkan buffer secara langsung
+      res.status(HttpStatus.OK).send(fileData);
     } catch (error) {
       let message = 'No transactions found to export for this period.';
       if (error instanceof HttpException) {
@@ -59,15 +56,12 @@ export class AnalyticsController {
             : (response as any).message;
         } else if (typeof response === 'string') {
           message = response;
-        } else {
-          message = error.message;
         }
       } else if (error instanceof Error) {
         message = error.message;
       }
-      return res.status(HttpStatus.BAD_REQUEST).json({
-        msg: message,
-      });
+      // Karena menggunakan passthrough, respons eror di dalam catch juga disesuaikan tanpa return di depan res
+      res.status(HttpStatus.BAD_REQUEST).json({ msg: message });
     }
   }
 }

@@ -1,21 +1,33 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional } from 'class-validator';
 
 export class GetAnalyticsDto {
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  range: string; // e.g., "30_days", "custom"
+  startDate?: string; // Mendukung format camelCase dari FE
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  type: string; // e.g., "expense", "income"
+  endDate?: string;
+
+  @IsOptional()
+  @IsString()
+  start_date?: string; // Fallback aman mendukung format snake_case dari FE
+
+  @IsOptional()
+  @IsString()
+  end_date?: string;
+
+  @IsOptional()
+  @IsString()
+  range?: string; // e.g., "30_days", "custom" (jaga-jaga jika FE kirim ini)
 }
 
 export class ExportReportDto {
   @IsNotEmpty()
   @IsString()
-  range: string;
+  period!: string; // e.g., "2026-05" atau "ALL"
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  period: string;
+  range?: string;
 }
