@@ -50,6 +50,7 @@ model User {
   email      String   @unique @db.VarChar(255)
   avatar_url String?  @db.Text
   currency   Currency @default(IDR)
+  report_frequency ReportFrequency @default(MONTHLY)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 

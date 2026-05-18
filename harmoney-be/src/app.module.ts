@@ -9,6 +9,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { AuthModule } from './auth/auth.module';
 import { TransactionModule } from './transaction/transaction.module';
 import { SavingModule } from './saving/saving.module';
+import { PreferenceModule } from './preference/preference.module';
 
 @Module({
   imports: [
@@ -20,7 +21,8 @@ import { SavingModule } from './saving/saving.module';
     DashboardModule,
     AuthModule,
     TransactionModule,
-    SavingModule
+    SavingModule,
+    PreferenceModule
   ],
   controllers: [AppController],
   providers: [AppService],
