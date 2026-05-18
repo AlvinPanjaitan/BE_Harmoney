@@ -1,11 +1,29 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
+import { PrismaModule } from './prisma/prisma.module'
 import { SplitModule } from './split/split.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { AuthModule } from './auth/auth.module';
+import { TransactionModule } from './transaction/transaction.module';
+import { SavingModule } from './saving/saving.module';
+import { PreferenceModule } from './preference/preference.module';
 
 @Module({
-  imports: [SplitModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    PrismaModule,
+    SplitModule,
+    DashboardModule,
+    AuthModule,
+    TransactionModule,
+    SavingModule,
+    PreferenceModule
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
