@@ -203,13 +203,18 @@ async function main() {
   console.log(`   ✓ ${transactions.length} transactions created`);
 
   // -----------------------------------------------------
-  // 6. CREATE SAVINGS GOALS
+  // 6. CREATE SAVINGS GOALS (PERBAIKAN TOTAL DI SINI)
   // -----------------------------------------------------
   console.log('\n🎯 Creating savings goals...');
+  
+  // Gunakan wallets[0] (Bank BCA) sebagai jangkar default data seed tabungan
+  const defaultWalletId = wallets[0].wallet_id;
+
   const savings = await Promise.all([
     prisma.saving.create({
       data: {
         user_id: user.user_id,
+        wallet_id: defaultWalletId,
         name: 'Liburan Bali',
         target_amount: 5000000,
         current_amount: 2500000,
@@ -220,16 +225,18 @@ async function main() {
     prisma.saving.create({
       data: {
         user_id: user.user_id,
-        name: 'Laptop Baru',
+        wallet_id: defaultWalletId,
+        name: "Laptop Baru",
         target_amount: 15000000,
         current_amount: 4500000,
-        target_date: new Date('2026-09-30'),
-        icon: '💻',
+        target_date: new Date("2026-09-30T00:00:00.000Z"),
+        icon: "💻",
       },
     }),
     prisma.saving.create({
       data: {
         user_id: user.user_id,
+        wallet_id: defaultWalletId,
         name: 'Emergency Fund',
         target_amount: 30000000,
         current_amount: 8000000,
@@ -238,6 +245,7 @@ async function main() {
       },
     }),
   ]);
+  
   savings.forEach((s) =>
     console.log(
       `   ✓ Saving: ${s.icon} ${s.name} — ${((Number(s.current_amount) / Number(s.target_amount)) * 100).toFixed(0)}%`,

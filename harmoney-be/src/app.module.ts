@@ -8,6 +8,7 @@ import { SplitModule } from './split/split.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { AuthModule } from './auth/auth.module';
 import { TransactionModule } from './transaction/transaction.module';
+import { SavingModule } from './saving/saving.module';
 
 @Module({
   imports: [
@@ -18,7 +19,8 @@ import { TransactionModule } from './transaction/transaction.module';
     SplitModule,
     DashboardModule,
     AuthModule,
-    TransactionModule
+    TransactionModule,
+    SavingModule
   ],
   controllers: [AppController],
   providers: [AppService],
