@@ -5,6 +5,6 @@ import { AppService } from './app.service';
 export class AppController {
   @Get()
   getHello(): string {
-    return 'Hello World Alvin!';
+    return 'Server Running!';
   }
 }
