@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-
 import { PrismaModule } from './prisma/prisma.module';
 import { SplitModule } from './split/split.module';
 import { AnalyticsModule } from './analytics/analytics.module';
@@ -11,6 +10,8 @@ import { AuthModule } from './auth/auth.module';
 import { TransactionModule } from './transaction/transaction.module';
 import { SavingModule } from './saving/saving.module';
 import { PreferenceModule } from './preference/preference.module';
+import { WalletsModule } from './wallets/wallets.module';
+import { CategoriesModule } from './categories/categories.module';
 
 @Module({
   imports: [
@@ -19,12 +20,14 @@ import { PreferenceModule } from './preference/preference.module';
     }),
     PrismaModule,
     SplitModule,
-    AnalyticsModule, // Modul analytics dari temanmu sudah aman tergabung
+    AnalyticsModule, 
     DashboardModule,
     AuthModule,
     TransactionModule,
     SavingModule,
-    PreferenceModule, // Modul preference kamu tetap aman terjaga
+    PreferenceModule,
+    WalletsModule,
+    CategoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
