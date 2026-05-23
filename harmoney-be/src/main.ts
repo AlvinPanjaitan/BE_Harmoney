@@ -9,6 +9,12 @@ async function createServer() {
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
   app.enableCors();
   await app.init();
+
+  
+  if (process.env.NODE_ENV !== 'production') {
+    const port = process.env.PORT || 3000;
+    await app.listen(port);
+  }
 }
 
 createServer();
