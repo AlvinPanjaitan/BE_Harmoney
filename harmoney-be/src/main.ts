@@ -10,10 +10,10 @@ async function createServer() {
   app.enableCors();
   await app.init();
 
-  
   if (process.env.NODE_ENV !== 'production') {
     const port = process.env.PORT || 3000;
     await app.listen(port);
+    console.log(`=== SERVER RUNNING AT PORT ${port} ===`);
   }
 }
 
