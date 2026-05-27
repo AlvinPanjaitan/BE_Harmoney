@@ -72,6 +72,53 @@ export class AuthService {
     };
   }
 
+
+  async googleSync(dto: any) {
+    if (!dto.email) {
+      throw new BadRequestException('Email from Google OAuth is required!');
+    }
+
+    
+    const user = await this.prisma.user.upsert({
+      where: { email: dto.email },
+      update: {
+        name: dto.name, 
+      },
+      create: {
+        email: dto.email,
+        name: dto.name || 'Google User',
+        currency: 'IDR',
+      },
+    });
+
+    await this.prisma.authCredential.upsert({
+      where: {
+        user_id_provider: {
+          user_id: user.user_id, 
+          provider: 'GOOGLE',  
+        },
+      },
+      update: {},
+      create: {
+        user_id: user.user_id,
+        provider: 'GOOGLE',
+        password: null, 
+      },
+    });
+
+    
+    const payload = { sub: user.user_id, email: user.email };
+    return {
+      message: 'Google account synchronized successfully!',
+      access_token: this.jwtService.sign(payload),
+      user: {
+        userId: user.user_id,
+        email: user.email,
+        name: user.name,
+      },
+    };
+  }
+
   async forgotPassword(dto: any) {
     const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
     if (!user) {
