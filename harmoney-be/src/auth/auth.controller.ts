@@ -16,6 +16,12 @@ export class AuthController {
     return this.authService.signIn(dto);
   }
 
+  @Post('google-sync')
+  @HttpCode(HttpStatus.OK)
+  async googleSync(@Body() dto: any) {
+    return this.authService.googleSync(dto);
+  }
+
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   async forgotPassword(@Body() dto: any) {
