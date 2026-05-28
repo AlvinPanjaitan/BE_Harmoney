@@ -1,4 +1,5 @@
 import { Prisma, PrismaClient, CategoryType, TransactionType } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
@@ -6,7 +7,7 @@ const prisma = new PrismaClient();
 // Hardcoded user ID — dipake juga di DashboardController nanti
 // =====================================================
 const SEED_USER_ID = '11111111-1111-1111-1111-111111111111';
-
+const SEED_PASSWORD = 'password123'; 
 // =====================================================
 // Helper: Random integer between min (inclusive) and max (inclusive)
 // =====================================================
@@ -41,15 +42,25 @@ async function main() {
   // 2. CREATE USER
   // -----------------------------------------------------
   console.log('👤 Creating user...');
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(SEED_PASSWORD, salt);
+
   const user = await prisma.user.create({
     data: {
       user_id: SEED_USER_ID,
       name: 'Mikail Test',
       email: 'mikail.test@harmoney.local',
       currency: 'IDR',
+      auth_credentials: {
+        create: {
+          provider: 'LOCAL',
+          password: hashedPassword,
+        },
+      },
     },
   });
   console.log(`   ✓ User: ${user.name} (${user.email})`);
+  console.log(`   ✓ Login: ${user.email} / ${SEED_PASSWORD}`);
 
   // -----------------------------------------------------
   // 3. CREATE WALLETS
