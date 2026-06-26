@@ -75,36 +75,54 @@ def analyze_receipt(image_bytes, ocr_text):
     base64_image = encode_image(image_bytes)
 
     prompt = f"""
-    You are an expert receipt parser.
+    You are an expert receipt parser with advanced accounting logic perception.
 
     IMPORTANT:
     - OCR TEXT is PRIMARY source.
     - IMAGE is fallback only.
     - DO NOT hallucinate values.
     - ONLY return valid JSON.
-    - ONLY extract:
-      - date
-      - items
+
+    CRITICAL UNIT & QUANTITY PARSING RULES:
+    Look closely at how quantities and units are written. DO NOT mistake product volume/packaging units (like "ml", "gr", "lusin", "pack", "pcs") as the item quantity ('qty').
+    
+    Case 1 (Packaging/Volume Units): 
+    - Example: "1 500 ml x 7,000" -> This means 1 bottle of 500ml priced at 7,000. 
+      CORRECT: 'qty' = 1, 'price' = 7000, 'portion_price' = 7000.
+      WRONG: 'qty' = 500, 'price' = 7.
+      
+    Case 2 (Bundle Units like 'lusin'):
+    - Example: "1 lusin x 36,000" -> This means 1 bundle/pack of a dozen priced at 36,000 total for that pack.
+      CORRECT: 'qty' = 1, 'price' = 36000, 'portion_price' = 36000.
+      WRONG: 'qty' = 12, 'price' = 3000. (Unless the receipt explicitly shows 12 x 3,000).
+
+    CRITICAL PRICE LOGIC DETECTION INSTRUCTIONS:
+    Analyze the receipt format. Determine which format this receipt uses before populating 'price' and 'portion_price':
+    Format A (Unit Price Printed): The number listed next to the item is for ONE single unit. 
+    Format B (Portion Price Printed): The number listed next to the item is ALREADY the TOTAL price for that row.
+    Cross-check mathematically: ('qty' * 'price') MUST ALWAYS equal 'portion_price'.
+
+    GENERAL RULES:
+    1. merchant_name: Extract the store name from the top (e.g., "Karis Jaya Shop").
+    2. transaction_date: Convert to ISO 8601 (YYYY-MM-DDTHH:mm:ssZ).
+    3. total_price: Extract the final absolute total bill paid at the bottom (e.g., 70000). DO NOT use Sub Total.
+    4. items: Extract all active lines. Include Tax, Service Charge, or Rounding as separate items. DO NOT include "Sub Total" or "Total" inside this list.
 
     OCR TEXT:
     {ocr_text}
 
-    For each item extract:
-    - name
-    - quantity
-    - unit_price
-    - total_price
-
-    STRICT JSON OUTPUT:
+    STRICT JSON OUTPUT FORMAT:
 
     {{
-      "date": "",
+      "merchant_name": "",
+      "transaction_date": "",
+      "total_price": 0,
       "items": [
         {{
           "name": "",
-          "quantity": 1,
-          "unit_price": 0,
-          "total_price": 0
+          "price": 0,
+          "qty": 1,
+          "portion_price": 0
         }}
       ]
     }}
@@ -140,7 +158,7 @@ def analyze_receipt(image_bytes, ocr_text):
 
 
 
-@app.route("/scan-receipt", methods=["POST"])
+@app.route("/api/scan-receipt", methods=["POST"])
 def scan_receipt():
 
     try:
@@ -156,15 +174,32 @@ def scan_receipt():
 
         ocr_result = extract_ocr(image_bytes)
 
-        parsed_receipt = analyze_receipt(
+        ai_response = analyze_receipt(
             image_bytes=image_bytes,
             ocr_text=ocr_result["raw_text"]
         )
 
-        return jsonify({
-            "success": True,
-            "data": parsed_receipt
-        })
+        formatted_items = []
+        for index, item in enumerate(ai_response.get("items", []), start=1):
+            formatted_items.append({
+                "item_id": index,
+                "name": item.get("name"),
+                "portion_price": item.get("portion_price"),
+                "price": item.get("price"),
+                "qty": item.get("qty")
+            })
+
+        final_response = {
+            "msg": "OCR Scan successful",
+            "data": {
+                "merchant_name": ai_response.get("merchant_name"),
+                "transaction_date": ai_response.get("transaction_date"),
+                "total_price": ai_response.get("total_price"),
+                "items": formatted_items
+            }
+        }
+
+        return jsonify(final_response), 200
 
     except Exception as e:
 
@@ -174,4 +209,5 @@ def scan_receipt():
         }), 500
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 7860))
+    app.run(host="0.0.0.0", port=port, debug=False)
